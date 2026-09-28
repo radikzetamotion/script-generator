@@ -433,8 +433,8 @@ label {
    CONFIG & QUOTA MONITOR (FREE TIER)
    ══════════════════════════════════════════════ */
 // Model gratisan: Gemini Flash Free Tier (15 RPM / 1.500 Request Per Hari)
-const MODEL = "gemini-3.6-flash";
-const FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+const MODEL = "gemini-2.0-flash";
+const FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash-lite", "gemini-1.5-pro"];
 
 const FREE_TIER_DAILY_LIMIT = 1500;
 const FREE_TIER_RPM_LIMIT = 15;
@@ -773,6 +773,8 @@ function parseJSON(text) {
   } catch { return null; }
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 async function callGemini(system, user, useSearch) {
   const apiKey = store.get("gemini_key") || "";
   if (!apiKey) throw new Error("API key belum dimasukkan. Silakan masukkan API key Gemini Anda.");
@@ -819,56 +821,84 @@ async function callGemini(system, user, useSearch) {
       try { errJson = JSON.parse(detail); } catch {}
       const errMsg = errJson?.error?.message || detail;
 
-      if (res.status === 429) {
-        const warnEl = $("quotaWarning");
-        if (warnEl) {
-          warnEl.innerHTML = `⚠️ <strong>Limit Kuota Gratis Tercapai (HTTP 429):</strong> Kuota gratis Gemini Anda sedang mepet/habis. Jika baru saja banyak request, tunggu 1-2 menit (reset per menit 15 RPM). Jika batas harian habis, kuota akan direset esok hari oleh Google.`;
-          warnEl.classList.remove("hidden");
-        }
-        throw new Error("⚠️ Kuota gratis Gemini terkena batas limit (Rate Limit / Quota Exceeded). Harap tunggu 1-2 menit.");
-      }
-      if (res.status === 503) {
-        throw new Error("⚠️ Server Gemini sedang mengalami lonjakan beban sementara (HTTP 503). Harap coba klik Generate lagi dalam 3-5 detik.");
-      }
-      if (res.status === 401 || res.status === 403) throw new Error("API key Gemini ditolak. Periksa kembali API key Anda.");
-      if (res.status === 404) throw new Error(`Model ${modelToUse} tidak ditemukan (404).`);
-      throw new Error(`Gemini returned an error (${res.status}): ${errMsg}`);
+      const err = new Error(errMsg);
+      err.status = res.status;
+      err.model = modelToUse;
+      throw err;
     }
 
     const data = await res.json();
     return data.candidates[0].content.parts[0].text;
   };
 
-  try {
-    const result = await sendRequest(MODEL, useSearch);
-    recordUsage();
-    return result;
-  } catch (err) {
-    // Pada Free Tier, Google Search grounding sering memicu 429 (memerlukan billing).
-    // Jika gagal saat useSearch aktif, otomatis fallback tanpa search agar request gratis tetap berhasil.
-    if (useSearch && (err.message.includes("429") || err.message.includes("quota") || err.message.includes("Quota"))) {
+  const modelsToTry = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-pro"
+  ];
+
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    for (const currentModel of modelsToTry) {
       try {
-        const result = await sendRequest(MODEL, false);
+        const searchActive = useSearch && attempt === 0 && currentModel === modelsToTry[0];
+        const result = await sendRequest(currentModel, searchActive);
         recordUsage();
         return result;
-      } catch (retryErr) {
-        throw retryErr;
-      }
-    }
-    // Jika model 404, coba fallback model free lainnya
-    if (err.message.includes("404")) {
-      for (const fallbackModel of FALLBACK_MODELS) {
-        if (fallbackModel !== MODEL) {
+      } catch (err) {
+        lastError = err;
+
+        if (err.status === 401 || err.status === 403) {
+          throw new Error("API key Gemini ditolak (401/403). Periksa kembali API key Anda di Google AI Studio.");
+        }
+
+        // Jika server model sedang overload (503) atau model 404 / 500:
+        // Otomatis lanjut mencoba model alternatif berikutnya
+        if (err.status === 503 || err.status === 404 || err.status === 500) {
+          console.warn(`Model ${currentModel} returned ${err.status}, auto-failing over to next candidate...`);
+          await sleep(600);
+          continue;
+        }
+
+        // Jika rate limit 429
+        if (err.status === 429) {
+          const warnEl = $("quotaWarning");
+          if (warnEl) {
+            warnEl.innerHTML = `⚠️ <strong>Kecepatan Request Tinggi (HTTP 429):</strong> Menunggu sebentar lalu mencoba kembali otomatis...`;
+            warnEl.classList.remove("hidden");
+          }
+          await sleep(1500);
+          continue;
+        }
+
+        // Jika search grounding ditolak di model gratis, coba model ini tanpa search
+        if (useSearch && (err.status === 400 || (err.message && err.message.toLowerCase().includes("search")))) {
           try {
-            const result = await sendRequest(fallbackModel, false);
+            const result = await sendRequest(currentModel, false);
             recordUsage();
             return result;
-          } catch {}
+          } catch (noSearchErr) {
+            lastError = noSearchErr;
+          }
         }
       }
     }
-    throw err;
+
+    if (attempt === 0) {
+      await sleep(1500);
+    }
   }
+
+  if (lastError && lastError.status === 503) {
+    throw new Error("⚠️ Server Google Gemini sedang mengalami lonjakan beban di semua model (HTTP 503). Harap coba klik Generate lagi dalam beberapa saat.");
+  }
+  if (lastError && lastError.status === 429) {
+    throw new Error("⚠️ Batas kuota gratis per menit tercapai (15 RPM). Tunggu 30 detik sebelum mencoba lagi.");
+  }
+  throw new Error(`Gagal menghubungi Gemini: ${lastError ? lastError.message : "Silakan coba lagi."}`);
 }
 
 /* ══════════════ gate ══════════════ */

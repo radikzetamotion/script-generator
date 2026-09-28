@@ -1,0 +1,1433 @@
+<meta charset="utf-8">
+<title>SaaS Video Script Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Syne:wght@700;800&display=swap');
+
+* { box-sizing: border-box; }
+::selection { background: #a78bfa; color: #0a0a0f; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0a0a0f;
+  color: #f1eff8;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+}
+
+input, textarea, button { font-family: inherit; }
+input:focus, textarea:focus { outline: none; border-color: #a78bfa !important; }
+button:disabled { opacity: .35; cursor: not-allowed; }
+
+.badge {
+  display: inline-block;
+  background: rgba(167,139,250,.12);
+  border: 1px solid rgba(167,139,250,.35);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  color: #c4b5fd;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin: 0 0 14px;
+}
+h1 span { color: #a78bfa; }
+
+.head { text-align: center; margin-bottom: 44px; max-width: 560px; }
+.head p { color: #9d99ab; font-size: 14px; line-height: 1.6; margin: 0; }
+
+.card {
+  width: 100%;
+  max-width: 640px;
+  background: #111116;
+  border: 1px solid #1e1e26;
+  border-radius: 16px;
+  padding: 30px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: .10em;
+  color: #b0adc0;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.inp {
+  width: 100%;
+  background: #0d0d12;
+  border: 1px solid #242432;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #f1eff8;
+  line-height: 1.5;
+  resize: vertical;
+}
+.inp::placeholder { color: #6b687c; }
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  background: #a78bfa;
+  color: #0c0919;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover:not(:disabled) {
+  background: #b9a3fc;
+  box-shadow: 0 4px 18px rgba(167, 139, 250, 0.35);
+}
+
+.ghost {
+  background: #14141c;
+  border: 1px solid #272736;
+  border-radius: 8px;
+  color: #dcd8eb;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ghost:hover:not(:disabled) {
+  border-color: #a78bfa;
+  color: #ffffff;
+  background: #1c1c28;
+}
+
+.choice {
+  background: #13131c;
+  border: 1px solid #262638;
+  border-radius: 10px;
+  color: #f1eff8;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all .15s;
+  padding: 12px 8px;
+}
+.choice:hover:not([aria-pressed="true"]) {
+  background: #1a1a27;
+  border-color: #3e3e58;
+}
+.choice small {
+  display: block;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 10.5px;
+  color: #a5a2b8;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+.choice[aria-pressed="true"] {
+  background: #a78bfa;
+  border-color: #a78bfa;
+  color: #0c0919;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.28);
+}
+.choice[aria-pressed="true"] small {
+  color: #2b1d52;
+  font-weight: 700;
+}
+
+.err { color: #ff6b6b; font-size: 12px; margin: 0 0 14px; line-height: 1.5; font-weight: 600; }
+.hint { color: #9d99ab; font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
+.hint a { color: #a78bfa; font-weight: 600; }
+
+#reset {
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .15s;
+}
+#reset:hover {
+  color: #c4b5fd;
+  text-decoration: underline;
+}
+
+.tag {
+  background: rgba(167,139,250,.12);
+  border: 1px solid rgba(167,139,250,.30);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c4b5fd;
+  letter-spacing: .06em;
+}
+
+#script {
+  background: #0d0d12;
+  border: 1px solid #1e1e26;
+  border-radius: 12px;
+  padding: 22px;
+  line-height: 1.8;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.pulse { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .4 } }
+.fade { animation: fade .4s ease both; }
+@keyframes fade { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+.hidden { display: none !important; }
+.row { display: flex; gap: 8px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+@media (max-width: 460px) { .grid4 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+/* ─── Storyboard Dual-Column & Hook Styles ─── */
+.shot-card {
+  background: #111116;
+  border: 1px solid #1e1e26;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.shot-card:hover { border-color: #2b2b38; }
+.shot-head {
+  background: #16161f;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e1e26;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+}
+.shot-visual-col {
+  border-left: 1px solid #1e1e26;
+  padding-left: 16px;
+}
+@media (max-width: 600px) {
+  .shot-grid { grid-template-columns: 1fr; }
+  .shot-visual-col { border-left: none; border-top: 1px solid #1e1e26; padding-left: 0; padding-top: 14px; }
+}
+
+.hook-card {
+  background: #13131a;
+  border: 1px solid #1e1e26;
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hook-card:hover {
+  border-color: #a78bfa;
+  background: #171724;
+}
+.hook-card.active {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+}
+</style>
+
+<!-- ═══════════════ GATE ═══════════════ -->
+<div class="head">
+  <div class="badge">SaaS Kit</div>
+  <h1>Script <span>Generator</span></h1>
+  <p id="tagline">Add your API key once. It stays on this device.</p>
+</div>
+
+<div class="card" id="gate">
+  <div style="margin-bottom:22px">
+    <label for="apikey">Gemini API key</label>
+    <input id="apikey" class="inp" type="password" placeholder="AIza..." value="AQ.Ab8RN6LN647i0IFsAYG7tBjRydgA2Gf4lryxydYjXhO_pGTJsw">
+    <p class="hint">
+      Get one free at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com</a>.
+      Stored only in this browser, never sent anywhere except Google.
+    </p>
+  </div>
+
+  <p class="err hidden" id="gateErr"></p>
+
+  <button class="btn" id="unlock" style="width:100%;padding:16px;font-size:15px">Save key</button>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div class="card hidden" id="app">
+
+  <!-- quota status & warning -->
+  <div id="quotaStatus" style="display:flex;align-items:center;justify-content:space-between;background:#0d0d12;border:1px solid #1e1e26;border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:11px">
+    <div>
+      <span style="color:#a78bfa;font-weight:700">⚡ Gemini Free Tier</span>
+      <span style="color:#6b6966;margin-left:6px" id="modelBadge">gemini-3.6-flash</span>
+    </div>
+    <span id="quotaCount" style="color:#a78bfa">0 / 1500 request hari ini</span>
+  </div>
+
+  <div id="quotaWarning" class="err hidden" style="background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:12px;line-height:1.5"></div>
+
+  <!-- autofill -->
+  <div style="margin-bottom:26px;padding-bottom:26px;border-bottom:1px solid #1a1a22">
+    <label for="url">Autofill from URL (optional)</label>
+    <div class="row">
+      <input id="url" class="inp" type="url" placeholder="https://yourproduct.com" style="flex:1">
+      <button class="ghost" id="autofill" style="padding:0 20px;font-size:13px;white-space:nowrap">Autofill</button>
+    </div>
+  </div>
+
+  <div id="fields" style="display:grid;gap:16px;margin-bottom:26px"></div>
+
+  <div style="margin-bottom:18px">
+    <label>Video type <span style="font-size:10.5px;color:#9d99ab;font-weight:500;text-transform:none;letter-spacing:0">— Tujuan & audiens sasaran video</span></label>
+    <div class="grid4" id="types"></div>
+  </div>
+
+  <div style="margin-bottom:18px">
+    <label>Target length <span style="font-size:10.5px;color:#9d99ab;font-weight:500;text-transform:none;letter-spacing:0">— Estimasi durasi pembacaan narasi (hingga 3-4 menit)</span></label>
+    <div id="lengths" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(105px, 1fr));gap:8px"></div>
+
+    <!-- Custom Duration Box (Collapsible / Interactive) -->
+    <div id="customLengthWrap" class="hidden" style="margin-top:10px;background:#13131c;border:1px solid #28283a;border-radius:10px;padding:14px 16px;animation:fade .3s ease">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;color:#c4b5fd">⏱️ Input Durasi Kustom:</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input id="customLengthInput" type="number" class="inp" min="15" max="600" step="5" value="180" style="width:90px;padding:6px 10px;text-align:center;font-size:14px;font-weight:800;background:#0d0d12;border-color:#3e3e58">
+            <span style="font-size:12px;color:#9d99ab;font-weight:600">detik</span>
+          </div>
+        </div>
+        <div id="customLengthCalc" style="font-size:12px;color:#dcd8eb;font-weight:600;background:#1c1c2b;padding:5px 12px;border-radius:6px;border:1px solid #2b2b40">
+          3 Menit (180s) · ~420 kata · ~10 shots
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#8e8b9e;font-weight:600">Pilihan Cepat Long-form:</span>
+        <button type="button" class="ghost quick-len" data-sec="120" style="padding:3px 9px;font-size:11px">2 Menit (120s)</button>
+        <button type="button" class="ghost quick-len" data-sec="150" style="padding:3px 9px;font-size:11px">2.5 Menit (150s)</button>
+        <button type="button" class="ghost quick-len" data-sec="180" style="padding:3px 9px;font-size:11px">3 Menit (180s)</button>
+        <button type="button" class="ghost quick-len" data-sec="210" style="padding:3px 9px;font-size:11px">3.5 Menit (210s)</button>
+        <button type="button" class="ghost quick-len" data-sec="240" style="padding:3px 9px;font-size:11px">4 Menit (240s)</button>
+        <button type="button" class="ghost quick-len" data-sec="300" style="padding:3px 9px;font-size:11px">5 Menit (300s)</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:18px">
+    <label>Platform & Aspect Ratio <span style="font-size:10.5px;color:#9d99ab;font-weight:500;text-transform:none;letter-spacing:0">— Resolusi visual & orientasi kamera</span></label>
+    <div class="row" id="platforms"></div>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <label>Tone of Voice <span style="font-size:10.5px;color:#9d99ab;font-weight:500;text-transform:none;letter-spacing:0">— Karakter gaya bahasa narator</span></label>
+    <div class="grid4" id="tones" style="grid-template-columns: repeat(3, minmax(0,1fr))"></div>
+  </div>
+
+  <!-- Live Combination Guide Card -->
+  <div id="combinationCard" style="background:#13131c;border:1px solid #28283a;border-radius:12px;padding:16px;margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;font-weight:700;color:#c4b5fd;letter-spacing:.08em;text-transform:uppercase">💡 Gambaran Kombinasi Terpilih</span>
+      <span id="comboBadge" style="font-size:11px;color:#a78bfa;background:rgba(167,139,250,0.12);padding:3px 10px;border-radius:6px;border:1px solid rgba(167,139,250,0.3);font-weight:700">Demo (60s) · 16:9 · Witty</span>
+    </div>
+    <div id="comboDesc" style="font-size:12.5px;line-height:1.6;color:#e1dfec;margin-bottom:10px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px;padding-top:10px;border-top:1px solid #222230">
+      <div>
+        <span style="color:#8e8b9e;display:block;margin-bottom:2px">🎯 Sasaran & Penempatan:</span>
+        <span id="comboTarget" style="color:#dcd8eb;font-weight:600"></span>
+      </div>
+      <div>
+        <span style="color:#8e8b9e;display:block;margin-bottom:2px">🎬 Alur Narasi & Visual:</span>
+        <span id="comboStructure" style="color:#dcd8eb;font-weight:600"></span>
+      </div>
+    </div>
+  </div>
+
+  <p class="err hidden" id="appErr"></p>
+
+  <button class="btn" id="generate" style="width:100%;padding:16px;font-size:15px">Generate Script</button>
+
+  <div id="output" class="hidden fade" style="margin-top:30px;padding-top:26px;border-top:1px solid #1a1a22">
+    <!-- Meta tags (Product Name, Hook Type, Duration) -->
+    <div id="tags" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+    <!-- Audio Narration Player Bar (Web Speech API) -->
+    <div id="audioPlayerBar" style="background:#13131c;border:1px solid #1e1e26;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button id="btnPlayAudio" class="btn" style="padding:8px 16px;font-size:12px;border-radius:8px;display:flex;align-items:center;gap:6px">
+          <span id="playIcon">▶</span> <span id="playText">Play Voiceover</span>
+        </button>
+        <span id="audioStatus" style="font-size:11px;color:#a78bfa;font-weight:500">Ready to play</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;font-size:11px">
+        <span id="wpmMeter" style="color:#e8e6e0;background:#1b1b26;padding:4px 10px;border-radius:6px;border:1px solid #28283a">0 kata (~140 WPM)</span>
+        <span id="pacingBadge" style="color:#85837f">Estimasi: ~0s</span>
+      </div>
+    </div>
+
+    <!-- Multi-Hook Variation Section (A/B Testing) -->
+    <div id="hookSection" style="margin-bottom:24px;background:#0d0d12;border:1px solid #1e1e26;border-radius:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:.08em;text-transform:uppercase">🎣 A/B Test Hook Variations</span>
+        <button id="regenHooks" class="ghost" style="padding:4px 10px;font-size:10px">↻ Generate More Hooks</button>
+      </div>
+      <p style="font-size:11px;color:#6b6966;margin:0 0 10px">Klik salah satu variasi di bawah untuk langsung mengganti Hook (Shot 1) di Storyboard:</p>
+      <div id="hookList" style="display:grid;gap:8px"></div>
+    </div>
+
+    <!-- View Mode Switcher: Storyboard vs Plain VO -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;letter-spacing:.1em;color:#6b6966;text-transform:uppercase;font-weight:700">🎬 Storyboard Breakdown</span>
+      <div class="row" style="gap:4px">
+        <button id="btnViewStoryboard" class="choice" style="padding:4px 12px;font-size:11px" aria-pressed="true">Dual Storyboard</button>
+        <button id="btnViewPlain" class="choice" style="padding:4px 12px;font-size:11px" aria-pressed="false">Plain VO</button>
+      </div>
+    </div>
+
+    <!-- Script Container -->
+    <div id="script"></div>
+
+    <p id="structure" style="font-size:10px;color:#6b6966;letter-spacing:.08em;margin:14px 0 16px"></p>
+
+    <!-- Copy Actions -->
+    <div class="row" style="gap:8px">
+      <button class="ghost" id="copy" style="flex:1;padding:13px;font-size:13px">Copy Voiceover</button>
+      <button class="ghost" id="copyStoryboard" style="flex:1;padding:13px;font-size:13px">Copy Storyboard (MD)</button>
+    </div>
+  </div>
+
+  <p class="hint" style="margin-top:24px;text-align:center">
+    <a href="#" id="reset">Reset API key</a>
+  </p>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   CONFIG & QUOTA MONITOR (FREE TIER)
+   ══════════════════════════════════════════════ */
+// Model gratisan: Gemini Flash Free Tier (15 RPM / 1.500 Request Per Hari)
+const MODEL = "gemini-3.6-flash";
+const FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+
+const FREE_TIER_DAILY_LIMIT = 1500;
+const FREE_TIER_RPM_LIMIT = 15;
+
+/* ══════════════ safe storage ══════════════ */
+const mem = {};
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { mem[k] = v; } },
+  del(k) { try { localStorage.removeItem(k); } catch { delete mem[k]; } }
+};
+
+/* ══════════════ quota tracker ══════════════ */
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getUsage() {
+  try {
+    const raw = store.get("gemini_usage");
+    if (!raw) return { date: getTodayStr(), count: 0, timestamps: [] };
+    const data = JSON.parse(raw);
+    if (data.date !== getTodayStr()) {
+      return { date: getTodayStr(), count: 0, timestamps: [] };
+    }
+    return data;
+  } catch {
+    return { date: getTodayStr(), count: 0, timestamps: [] };
+  }
+}
+
+function recordUsage() {
+  const usage = getUsage();
+  const now = Date.now();
+  usage.count = (usage.count || 0) + 1;
+  usage.timestamps = (usage.timestamps || []).filter(t => now - t < 60000);
+  usage.timestamps.push(now);
+  store.set("gemini_usage", JSON.stringify(usage));
+  updateQuotaUI();
+}
+
+function updateQuotaUI() {
+  const usage = getUsage();
+  const now = Date.now();
+  const recentRpm = (usage.timestamps || []).filter(t => now - t < 60000).length;
+  const countEl = $("quotaCount");
+  const warnEl = $("quotaWarning");
+
+  if (countEl) {
+    const sisa = Math.max(0, FREE_TIER_DAILY_LIMIT - usage.count);
+    countEl.textContent = `${usage.count} / ${FREE_TIER_DAILY_LIMIT} request hari ini (${recentRpm}/${FREE_TIER_RPM_LIMIT} RPM)`;
+  }
+
+  if (!warnEl) return;
+
+  // Deteksi kondisi kuota mepet / menipis:
+  // 1. Kecepatan request per menit sudah >= 12 (dari limit 15 RPM)
+  // 2. Kuota harian sudah >= 1200 (sisa <= 300 dari 1500 RPD)
+  if (recentRpm >= 12) {
+    warnEl.innerHTML = `⚠️ <strong>Peringatan Kuota Mepet (Per Menit):</strong> Anda telah melakukan <b>${recentRpm}/${FREE_TIER_RPM_LIMIT}</b> request dalam 60 detik terakhir. Harap tunggu sebentar sebelum generate berikutnya agar tidak terkena limit API 429.`;
+    warnEl.classList.remove("hidden");
+  } else if (usage.count >= 1200) {
+    const sisa = Math.max(0, FREE_TIER_DAILY_LIMIT - usage.count);
+    warnEl.innerHTML = `⚠️ <strong>Peringatan Kuota Harian Menipis:</strong> Anda sudah memakai <b>${usage.count}</b> request. Sisa kuota gratis hari ini tinggal ~<b>${sisa}</b> request lagi.`;
+    warnEl.classList.remove("hidden");
+  } else {
+    warnEl.classList.add("hidden");
+  }
+}
+
+/* ══════════════ prompts ══════════════ */
+const EXTRACT_SYSTEM = `You are a product analyst. Use web search to research the product at the URL you are given, then extract the following in JSON only (no markdown, no backticks, no preamble, no explanation before or after):
+{
+  "productName": "name of the product",
+  "whatItDoes": "1-2 sentence simple description of what it does",
+  "targetPersona": "who it's for (role/company type)",
+  "mainPain": "the main problem it solves",
+  "dreamOutcome": "the main result/outcome the user gets",
+  "features": "3 key features, comma separated",
+  "cta": "the main call to action on the page (e.g. Try free, Book a demo)"
+}
+Base every field on what you actually found. If a field is genuinely unclear, infer it conservatively from the product's own wording rather than inventing claims. Your entire reply must be the JSON object and nothing else.`;
+
+const SCRIPT_SYSTEM = `You are an elite SaaS video scriptwriter and motion design director. You write direct scripts and precise visual motion graphics directions for SaaS product videos, no fluff, no corporate speak.
+
+STYLE RULES:
+- Write like a sharp friend explaining something cool, with a hint of wit, never try-hard
+- NO generic openers like "Are you tired of...", "In today's world...", "Imagine a world where..."
+- NO "Here's how it works" or tutorial-style narration
+- NEVER use the "Not X... but Y" contrast construction
+- Visuals are for MOTION DESIGN: sleek UI screens, smooth cursor clicks, zoomed-in cards, and data flow animations. No stock footage, no real humans, no generic 3D shapes.
+- Voiceover text must be punchy, rhythmic, and natural.
+- Strictly NO em-dashes
+- Do not state a differentiator flatly ("X is the only platform that..."). Phrase it as a dream outcome so the viewer concludes it themselves.
+
+HOOK TYPES (pick the best one for the video type):
+- [Dream outcome]: "What if you could review a 50-page contract in minutes?"
+- [Problem]: "You know how X somehow takes forever? That's over."
+- [Persona callout + Problem]: "Are you a [role] still doing [pain]?"
+- [Teaser]: "Turn this into this"
+- [Context]: Direct, no buildup. Just "what is it". For warm/educated audiences.
+- For Demo videos on website: keep the hook very short or skip it, start with Solution.
+
+STRUCTURES BY VIDEO TYPE:
+- Ad (15-60s, cold audience): [Hook] -> [Solution] -> [Demo] -> [Features] -> [CTA]
+- Promo (30-45s, social): [Hook] -> [Solution] -> [Demo] -> [Features] -> [CTA]
+- Demo (60-90s, warm/website): [Solution] -> [Demo: how it works] -> [Features] -> [CTA]
+- Onboarding (90s+, existing users): [Intro] -> [Demo] -> [Outro]
+- Explainer / Long-form Motion (120-240s+, 2-4 min): [Hook / Problem Context] -> [The Old Painful Way] -> [Core Solution / Architecture] -> [Deep Feature 1] -> [Deep Feature 2] -> [Deep Feature 3 / Workflow] -> [Measurable ROI / Outcome] -> [CTA]
+
+OUTPUT FORMAT, return ONLY this JSON (no markdown, no backticks):
+{
+  "hookType": "name of hook used",
+  "structure": "the structure used",
+  "wordCount": 120,
+  "estimatedDuration": "~60 sec",
+  "script": "full voiceover text with each beat labelled in square brackets on its own line like [Hook], [Solution], [Demo], [Features], [CTA]",
+  "shots": [
+    {
+      "shot": 1,
+      "beat": "Hook",
+      "duration": "0-6s",
+      "voiceover": "spoken voiceover narration",
+      "visual": "precise motion graphics direction (e.g. Quick zoom on chaotic Jira board with red notifications, blur transition to clean screen)",
+      "textOnScreen": "2-4 word punchy on-screen text badge"
+    }
+  ],
+  "hookVariations": [
+    {
+      "type": "Problem-Focused",
+      "voiceover": "alternative punchy opening line",
+      "visual": "matching motion graphic UI cue",
+      "textOnScreen": "on-screen text"
+    },
+    {
+      "type": "Dream Outcome",
+      "voiceover": "alternative punchy opening line",
+      "visual": "matching motion graphic UI cue",
+      "textOnScreen": "on-screen text"
+    },
+    {
+      "type": "Curiosity / Teaser",
+      "voiceover": "alternative punchy opening line",
+      "visual": "matching motion graphic UI cue",
+      "textOnScreen": "on-screen text"
+    }
+  ]
+}`;
+
+const HOOKS_SYSTEM = `You are a viral SaaS video copywriter. Generate 3 fresh, high-converting opening hook variations for a SaaS motion video.
+Return ONLY valid JSON (no markdown, no backticks):
+{
+  "hookVariations": [
+    {
+      "type": "Problem-Focused",
+      "voiceover": "punchy opening voiceover line (under 16 words)",
+      "visual": "motion graphics UI visual cue",
+      "textOnScreen": "2-4 word typography badge"
+    },
+    {
+      "type": "Dream Outcome",
+      "voiceover": "punchy opening voiceover line (under 16 words)",
+      "visual": "motion graphics UI visual cue",
+      "textOnScreen": "2-4 word typography badge"
+    },
+    {
+      "type": "Curiosity / Teaser",
+      "voiceover": "punchy opening voiceover line (under 16 words)",
+      "visual": "motion graphics UI visual cue",
+      "textOnScreen": "2-4 word typography badge"
+    }
+  ]
+}`;
+
+/* ══════════════ data ══════════════ */
+const FIELDS = [
+  { key:"productName",   label:"Product name",  ph:"Northwind", rows:1 },
+  { key:"whatItDoes",    label:"What it does",  ph:"Turns raw meeting notes into structured project briefs", rows:2 },
+  { key:"targetPersona", label:"Who it's for",  ph:"Product managers at mid-size software teams", rows:1 },
+  { key:"mainPain",      label:"Main pain",     ph:"Notes pile up and decisions get lost between meetings", rows:2 },
+  { key:"dreamOutcome",  label:"Dream outcome", ph:"Every meeting ends with a clear, shareable brief", rows:2 },
+  { key:"features",      label:"Key features",  ph:"Live transcription, auto-tagged decisions, one-click export", rows:2 },
+  { key:"cta",           label:"CTA",           ph:"Start free trial", rows:1 }
+];
+
+const TYPES = [
+  { v:"ad",         l:"Ad",      s:"Cold · 15-60s" },
+  { v:"promo",      l:"Promo",   s:"Social · 30-45s" },
+  { v:"demo",       l:"Demo",    s:"Website · 60-90s" },
+  { v:"onboarding", l:"Onboard", s:"Users · 90s+" }
+];
+
+const LENGTH_PRESETS = [
+  { v: "30",     l: "30s",       s: "Iklan · 0.5m" },
+  { v: "60",     l: "60s",       s: "Standar · 1m" },
+  { v: "90",     l: "90s",       s: "Detail · 1.5m" },
+  { v: "120",    l: "120s",      s: "Explainer · 2m" },
+  { v: "180",    l: "180s",      s: "Deep Dive · 3m" },
+  { v: "240",    l: "240s",      s: "Full Tour · 4m" },
+  { v: "custom", l: "Custom ⚙️", s: "Atur Bebas" }
+];
+
+const PLATFORMS = [
+  { v: "9:16", l: "9:16", s: "TikTok / Reels · Fast" },
+  { v: "16:9", l: "16:9", s: "YouTube / Web · Wide" },
+  { v: "1:1",  l: "1:1",  s: "LinkedIn · Square" }
+];
+
+const TONES = [
+  { v: "witty",      l: "Witty & Sharp", s: "Linear / Raycast" },
+  { v: "enterprise", l: "Enterprise",    s: "Stripe / Confident" },
+  { v: "hype",       l: "High Energy",   s: "Launch / Dynamic AI" }
+];
+
+let videoType = "demo";
+let length = "60";
+let isCustomLength = false;
+let platform = "16:9";
+let tone = "witty";
+let lastScript = "";
+
+function formatDuration(sec) {
+  const s = parseInt(sec) || 60;
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return rem > 0 ? `${m}m ${rem}s (${s}s)` : `${m} Menit (${s}s)`;
+}
+
+function getLengthGuide(secStr) {
+  const s = parseInt(secStr) || 60;
+  const words = Math.round((s / 60) * 140);
+  const shots = Math.max(3, Math.round(s / 18));
+  if (s <= 35) {
+    return `Pacing sangat cepat & padat (~${words} kata, ~${shots} shot). Ideal untuk iklan berbayar / TikTok / Reels dengan retensi tinggi.`;
+  } else if (s <= 65) {
+    return `Standar emas video SaaS (~${words} kata, ~${shots} shot). Keseimbangan hook, demo fitur utama, dan CTA jelas.`;
+  } else if (s <= 95) {
+    return `Mendalam & terperinci (~${words} kata, ~${shots} shot). Cocok untuk solusi B2B teknikal, workflow kompleks, atau onboarding.`;
+  } else if (s <= 140) {
+    return `Explainer Motion Graphic 2 Menit (~${words} kata, ~${shots} shot). Menjelaskan arsitektur produk, pain point mendalam, dan multi-fitur secara elegan.`;
+  } else if (s <= 200) {
+    return `Long-form Explainer 3 Menit (~${words} kata, ~${shots} shot). Mengupas latar belakang industri, perbandingan alur lama vs baru, dan demo fitur end-to-end.`;
+  } else {
+    const min = (s / 60).toFixed(1);
+    return `Masterclass / Comprehensive Demo ~${min} Menit (~${words} kata, ~${shots} shot). Penjelasan sangat komprehensif untuk klien enterprise & motion graphic berdurasi panjang.`;
+  }
+}
+
+function updateCustomCalc() {
+  const s = parseInt($("customLengthInput") ? $("customLengthInput").value : length) || parseInt(length) || 180;
+  const words = Math.round((s / 60) * 140);
+  const shots = Math.max(3, Math.round(s / 18));
+  if ($("customLengthCalc")) {
+    $("customLengthCalc").textContent = `⏱️ ${formatDuration(s)} · ~${words} kata · ~${shots} shots breakdown`;
+  }
+}
+
+const GUIDE_DETAILS = {
+  types: {
+    ad: {
+      name: "Ad (Paid Ads)",
+      target: "Cold Audience (Iklan berbayar, belum kenal produk)",
+      structure: "[Hook Agresif] ➔ [Solusi] ➔ [Demo Kilat] ➔ [Fitur] ➔ [CTA]",
+      desc: "Menangkap perhatian dalam 3 detik pertama dengan menyorot masalah fatal yang dihadapi user, lalu menyajikan produk sebagai solusi instan tanpa bertele-tele."
+    },
+    promo: {
+      name: "Promo (Social Media)",
+      target: "Social Followers / Viral Feeds (Twitter/X, LinkedIn, IG)",
+      structure: "[Teaser Unik] ➔ [Fitur Unggulan] ➔ [Dream Outcome] ➔ [CTA]",
+      desc: "Fokus pada visual modern dan ritme seru yang memancing rasa penasaran, interaksi, dan shares di linimasa media sosial."
+    },
+    demo: {
+      name: "Demo (Website Hero / Explainer)",
+      target: "Warm Visitors & Leads (Pengunjung landing page / calon pembeli)",
+      structure: "[Solusi Langsung] ➔ [Demo UI: Cara Kerja] ➔ [Fitur Kunci] ➔ [CTA]",
+      desc: "Skrip penjelasan produk yang runtut, percaya diri, dan berbobot untuk meyakinkan calon pelanggan agar langsung mencoba atau memesan demo."
+    },
+    onboarding: {
+      name: "Onboard (Activation / Deep Dive)",
+      target: "New Signups & Enterprise Clients (Pengguna baru & eksplorasi mendalam)",
+      structure: "[Konteks & Masalah Industri] ➔ [Alur Solusi Baru] ➔ [Fitur Inti] ➔ [ROI & Outro]",
+      desc: "Memandu pengguna memahami 'Aha moment' dan workflow lengkap produk dengan visual motion graphics yang detail dan komprehensif."
+    }
+  },
+  platforms: {
+    "9:16": "Format Vertikal (TikTok/Reels/Shorts). Visual berfokus pada kartu mobile, cursor tap, dan zoom-in layar.",
+    "16:9": "Format Horizontal (YouTube/Website). Visual leluasa menampilkan UI dashboard desktop yang luas dan sinematik.",
+    "1:1": "Format Persegi (LinkedIn/Twitter Ads). Tampilan seimbang dan terpusat, pas di feed scroll mobile maupun desktop."
+  },
+  tones: {
+    witty: "Gaya santai, cerdas, modern tech ala Linear & Raycast. To-the-point dan tidak ada bahasa korporat yang kaku.",
+    enterprise: "Gaya kredibel, profesional, dan berwibawa ala Stripe & Datadog. Menekankan reliabilitas, keamanan, dan ROI bisnis.",
+    hype: "Gaya dinamis, seru, dan bertenaga tinggi ala Product Hunt #1 launch. Membangun rasa antusiasme dan momentum."
+  }
+};
+
+function updateCombinationGuide() {
+  const tInfo = GUIDE_DETAILS.types[videoType] || {};
+  const lInfo = getLengthGuide(length);
+  const durLabel = formatDuration(length);
+  const pInfo = GUIDE_DETAILS.platforms[platform] || "";
+  const toneInfo = GUIDE_DETAILS.tones[tone] || "";
+
+  const typeLabel = TYPES.find(t => t.v === videoType)?.l || videoType;
+  const toneLabel = TONES.find(t => t.v === tone)?.l || tone;
+
+  if ($("comboBadge")) {
+    $("comboBadge").textContent = `${typeLabel} (${durLabel}) · ${platform} · ${toneLabel}`;
+  }
+  if ($("comboDesc")) {
+    $("comboDesc").innerHTML = `<strong>Karakter Skrip:</strong> ${tInfo.desc} Disajikan dengan <em>${toneInfo.toLowerCase()}</em> dalam durasi ${durLabel} (${lInfo})`;
+  }
+  if ($("comboTarget")) {
+    $("comboTarget").textContent = tInfo.target;
+  }
+  if ($("comboStructure")) {
+    $("comboStructure").textContent = `${tInfo.structure} | ${pInfo}`;
+  }
+}
+
+/* ══════════════ helpers ══════════════ */
+const $ = (id) => document.getElementById(id);
+
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+function hideErr(el) { el.classList.add("hidden"); }
+
+function parseJSON(text) {
+  try {
+    const clean = text.replace(/```json|```/g, "").trim();
+    const m = clean.match(/\{[\s\S]*\}/);
+    return JSON.parse(m ? m[0] : clean);
+  } catch { return null; }
+}
+
+async function callGemini(system, user, useSearch) {
+  const apiKey = store.get("gemini_key") || "";
+  if (!apiKey) throw new Error("API key belum dimasukkan. Silakan masukkan API key Gemini Anda.");
+
+  updateQuotaUI();
+  const usage = getUsage();
+  const now = Date.now();
+  const recentRpm = (usage.timestamps || []).filter(t => now - t < 60000).length;
+  if (recentRpm >= FREE_TIER_RPM_LIMIT) {
+    throw new Error("⚠️ Kuota gratis mencapai batas kecepatan (15 request/menit). Harap tunggu 30-60 detik.");
+  }
+
+  const sendRequest = async (modelToUse, searchActive) => {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+    const body = {
+      system_instruction: {
+        parts: [{ text: system }]
+      },
+      contents: [
+        {
+          parts: [{ text: user }]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    };
+
+    if (searchActive) {
+      body.tools = [{ googleSearch: {} }];
+    }
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const detail = await res.text();
+      let errJson = null;
+      try { errJson = JSON.parse(detail); } catch {}
+      const errMsg = errJson?.error?.message || detail;
+
+      if (res.status === 429) {
+        const warnEl = $("quotaWarning");
+        if (warnEl) {
+          warnEl.innerHTML = `⚠️ <strong>Limit Kuota Gratis Tercapai (HTTP 429):</strong> Kuota gratis Gemini Anda sedang mepet/habis. Jika baru saja banyak request, tunggu 1-2 menit (reset per menit 15 RPM). Jika batas harian habis, kuota akan direset esok hari oleh Google.`;
+          warnEl.classList.remove("hidden");
+        }
+        throw new Error("⚠️ Kuota gratis Gemini terkena batas limit (Rate Limit / Quota Exceeded). Harap tunggu 1-2 menit.");
+      }
+      if (res.status === 503) {
+        throw new Error("⚠️ Server Gemini sedang mengalami lonjakan beban sementara (HTTP 503). Harap coba klik Generate lagi dalam 3-5 detik.");
+      }
+      if (res.status === 401 || res.status === 403) throw new Error("API key Gemini ditolak. Periksa kembali API key Anda.");
+      if (res.status === 404) throw new Error(`Model ${modelToUse} tidak ditemukan (404).`);
+      throw new Error(`Gemini returned an error (${res.status}): ${errMsg}`);
+    }
+
+    const data = await res.json();
+    return data.candidates[0].content.parts[0].text;
+  };
+
+  try {
+    const result = await sendRequest(MODEL, useSearch);
+    recordUsage();
+    return result;
+  } catch (err) {
+    // Pada Free Tier, Google Search grounding sering memicu 429 (memerlukan billing).
+    // Jika gagal saat useSearch aktif, otomatis fallback tanpa search agar request gratis tetap berhasil.
+    if (useSearch && (err.message.includes("429") || err.message.includes("quota") || err.message.includes("Quota"))) {
+      try {
+        const result = await sendRequest(MODEL, false);
+        recordUsage();
+        return result;
+      } catch (retryErr) {
+        throw retryErr;
+      }
+    }
+    // Jika model 404, coba fallback model free lainnya
+    if (err.message.includes("404")) {
+      for (const fallbackModel of FALLBACK_MODELS) {
+        if (fallbackModel !== MODEL) {
+          try {
+            const result = await sendRequest(fallbackModel, false);
+            recordUsage();
+            return result;
+          } catch {}
+        }
+      }
+    }
+    throw err;
+  }
+}
+
+/* ══════════════ gate ══════════════ */
+
+$("unlock").addEventListener("click", () => {
+  const api = $("apikey").value.trim();
+  hideErr($("gateErr"));
+
+  if (!api.startsWith("AIza") && !api.startsWith("AQ")) {
+    return showErr($("gateErr"), "That doesn't look like a Gemini key. It starts with AIza.");
+  }
+
+  store.set("gemini_key", api);
+  openApp();
+});
+
+function openApp() {
+  $("gate").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("tagline").textContent = "Paste a URL or write the brief. Edit anything before you generate.";
+  updateQuotaUI();
+  updateCombinationGuide();
+}
+
+$("reset").addEventListener("click", (e) => {
+  e.preventDefault();
+  store.del("gemini_key");
+  location.reload();
+});
+
+/* ══════════════ build UI ══════════════ */
+FIELDS.forEach(f => {
+  const wrap = document.createElement("div");
+  const tag = f.rows === 1 ? "input" : "textarea";
+  wrap.innerHTML =
+    '<label for="f-' + f.key + '">' + f.label + '</label>' +
+    '<' + tag + ' id="f-' + f.key + '" class="inp"' +
+      (f.rows > 1 ? ' rows="' + f.rows + '"' : '') +
+      ' placeholder="' + f.ph + '">' +
+      (f.rows > 1 ? '</textarea>' : '');
+  $("fields").appendChild(wrap);
+});
+
+TYPES.forEach(t => {
+  const b = document.createElement("button");
+  b.className = "choice";
+  b.setAttribute("aria-pressed", t.v === videoType);
+  b.innerHTML = t.l + '<small>' + t.s + '</small>';
+  b.onclick = () => {
+    videoType = t.v;
+    [...$("types").children].forEach((c, i) => c.setAttribute("aria-pressed", TYPES[i].v === videoType));
+    updateCombinationGuide();
+  };
+  $("types").appendChild(b);
+});
+
+LENGTH_PRESETS.forEach(p => {
+  const b = document.createElement("button");
+  b.className = "choice";
+  b.setAttribute("aria-pressed", p.v === length);
+  b.innerHTML = p.l + '<small>' + p.s + '</small>';
+  b.onclick = () => {
+    if (p.v === "custom") {
+      isCustomLength = true;
+      $("customLengthWrap").classList.remove("hidden");
+      const currentVal = parseInt($("customLengthInput").value) || 180;
+      length = String(currentVal);
+      [...$("lengths").children].forEach(c => c.setAttribute("aria-pressed", false));
+      b.setAttribute("aria-pressed", true);
+      updateCustomCalc();
+      updateCombinationGuide();
+      $("customLengthInput").focus();
+    } else {
+      isCustomLength = false;
+      length = p.v;
+      $("customLengthWrap").classList.add("hidden");
+      [...$("lengths").children].forEach((c, i) => c.setAttribute("aria-pressed", LENGTH_PRESETS[i].v === length));
+      updateCombinationGuide();
+    }
+  };
+  $("lengths").appendChild(b);
+});
+
+// Listener untuk input angka durasi kustom
+const customInp = $("customLengthInput");
+if (customInp) {
+  customInp.addEventListener("input", () => {
+    let val = parseInt(customInp.value);
+    if (!isNaN(val) && val > 0) {
+      length = String(val);
+      updateCustomCalc();
+      updateCombinationGuide();
+    }
+  });
+}
+
+// Listener untuk tombol pilihan cepat durasi kustom
+document.querySelectorAll(".quick-len").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const sec = btn.getAttribute("data-sec");
+    if (sec) {
+      $("customLengthInput").value = sec;
+      length = sec;
+      updateCustomCalc();
+      updateCombinationGuide();
+    }
+  });
+});
+
+PLATFORMS.forEach(p => {
+  const b = document.createElement("button");
+  b.className = "choice";
+  b.style.flex = "1";
+  b.setAttribute("aria-pressed", p.v === platform);
+  b.innerHTML = p.l + '<small>' + p.s + '</small>';
+  b.onclick = () => {
+    platform = p.v;
+    [...$("platforms").children].forEach((c, i) => c.setAttribute("aria-pressed", PLATFORMS[i].v === platform));
+    updateCombinationGuide();
+  };
+  $("platforms").appendChild(b);
+});
+
+TONES.forEach(t => {
+  const b = document.createElement("button");
+  b.className = "choice";
+  b.setAttribute("aria-pressed", t.v === tone);
+  b.innerHTML = t.l + '<small>' + t.s + '</small>';
+  b.onclick = () => {
+    tone = t.v;
+    [...$("tones").children].forEach((c, i) => c.setAttribute("aria-pressed", TONES[i].v === tone));
+    updateCombinationGuide();
+  };
+  $("tones").appendChild(b);
+});
+
+/* ══════════════ actions ══════════════ */
+$("autofill").addEventListener("click", async () => {
+  const url = $("url").value.trim();
+  hideErr($("appErr"));
+  if (!url) return showErr($("appErr"), "Paste a product URL first.");
+
+  $("autofill").textContent = "Reading…";
+  $("autofill").classList.add("pulse");
+  $("autofill").disabled = true;
+
+  try {
+    const raw = await callGemini(
+      EXTRACT_SYSTEM,
+      "Product URL: " + url + "\n\nSearch the web for this product, read what it actually does, then return the JSON.",
+      true
+    );
+    const p = parseJSON(raw);
+    if (!p) {
+      showErr($("appErr"), "Couldn't find enough about that product. Fill the fields in yourself.");
+    } else {
+      FIELDS.forEach(f => {
+        let v = p[f.key];
+        if (Array.isArray(v)) v = v.join(", ");
+        if (v) $("f-" + f.key).value = v;
+      });
+    }
+  } catch (e) {
+    showErr($("appErr"), e.message);
+  } finally {
+    $("autofill").textContent = "Autofill";
+    $("autofill").classList.remove("pulse");
+    $("autofill").disabled = false;
+  }
+});
+
+let currentData = null;
+let selectedHookIdx = -1;
+let currentView = "storyboard";
+
+function updateViewButtons() {
+  $("btnViewStoryboard").setAttribute("aria-pressed", currentView === "storyboard");
+  $("btnViewPlain").setAttribute("aria-pressed", currentView === "plain");
+}
+
+$("btnViewStoryboard").addEventListener("click", () => {
+  currentView = "storyboard";
+  updateViewButtons();
+  if (currentData) renderMainOutput();
+});
+
+$("btnViewPlain").addEventListener("click", () => {
+  currentView = "plain";
+  updateViewButtons();
+  if (currentData) renderMainOutput();
+});
+
+function renderHooks(variations) {
+  const list = $("hookList");
+  list.innerHTML = "";
+  if (!variations || !variations.length) {
+    $("hookSection").classList.add("hidden");
+    return;
+  }
+  $("hookSection").classList.remove("hidden");
+
+  variations.forEach((h, idx) => {
+    const card = document.createElement("div");
+    card.className = "hook-card" + (idx === selectedHookIdx ? " active" : "");
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span class="tag" style="font-size:10px">' + (h.type || ('Option ' + (idx + 1))) + '</span>' +
+        '<span style="font-size:11px;color:#a78bfa;font-weight:700">Terapkan ke Shot 1 ➔</span>' +
+      '</div>' +
+      '<div style="font-size:13px;color:#e8e6e0;line-height:1.5;font-weight:500">"' + (h.voiceover || '') + '"</div>' +
+      (h.visual ? '<div style="font-size:11px;color:#85837f;line-height:1.4">🎥 <em>' + h.visual + '</em></div>' : '');
+    card.onclick = () => applyHook(h, idx);
+    list.appendChild(card);
+  });
+}
+
+function applyHook(hook, idx) {
+  if (!currentData || !currentData.shots || !currentData.shots.length) return;
+  selectedHookIdx = idx;
+  currentData.shots[0].voiceover = hook.voiceover;
+  if (hook.visual) currentData.shots[0].visual = hook.visual;
+  if (hook.textOnScreen) currentData.shots[0].textOnScreen = hook.textOnScreen;
+
+  // Update raw lastScript voiceover string
+  rebuildLastScript();
+  renderMainOutput();
+  renderHooks(currentData.hookVariations);
+  updateAudioStats(lastScript, length);
+}
+
+function rebuildLastScript() {
+  if (!currentData || !currentData.shots) return;
+  lastScript = currentData.shots.map(s => {
+    return '[' + (s.beat || 'Beat') + ']\n' + (s.voiceover || '');
+  }).join('\n\n');
+}
+
+function renderMainOutput() {
+  const container = $("script");
+  container.innerHTML = "";
+
+  if (currentView === "plain" || !currentData.shots || !currentData.shots.length) {
+    container.textContent = lastScript || currentData.script || "";
+    return;
+  }
+
+  // Dual-Column Storyboard Rendering
+  currentData.shots.forEach((shot, idx) => {
+    const card = document.createElement("div");
+    card.className = "shot-card";
+    const shotNum = shot.shot || (idx + 1);
+    const beat = shot.beat || ("Shot " + shotNum);
+    const dur = shot.duration ? '<span style="color:#6b6966;font-size:11px">' + shot.duration + '</span>' : '';
+    const badge = shot.textOnScreen ? '<span class="tag" style="font-size:9px;border-color:rgba(167,139,250,0.3)">ON SCREEN: "' + shot.textOnScreen + '"</span>' : '';
+    const voText = shot.voiceover || '';
+
+    card.innerHTML =
+      '<div class="shot-head">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="background:#a78bfa;color:#0a0a0f;font-weight:800;font-size:10px;padding:2px 7px;border-radius:4px">SHOT ' + shotNum + '</span>' +
+          '<span style="color:#e8e6e0;font-weight:700;font-size:12px">' + beat + '</span>' +
+          dur +
+        '</div>' +
+        badge +
+      '</div>' +
+      '<div class="shot-grid">' +
+        '<div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+            '<span style="font-size:10px;color:#a78bfa;letter-spacing:.08em;text-transform:uppercase;font-weight:700">🎙️ Voiceover (Audio)</span>' +
+            '<button class="ghost btn-play-shot" style="padding:2px 8px;font-size:10px;border-radius:4px">▶ Play Shot</button>' +
+          '</div>' +
+          '<div style="font-size:13px;line-height:1.6;color:#e8e6e0;white-space:pre-wrap">"' + voText + '"</div>' +
+        '</div>' +
+        '<div class="shot-visual-col">' +
+          '<div style="font-size:10px;color:#a78bfa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;font-weight:700">🎥 Visual Cue (Motion Graphic)</div>' +
+          '<div style="font-size:12px;line-height:1.6;color:#9b9994;white-space:pre-wrap">' + (shot.visual || '') + '</div>' +
+        '</div>' +
+      '</div>';
+
+    const playBtn = card.querySelector(".btn-play-shot");
+    if (playBtn) {
+      playBtn.onclick = () => playVoiceover(voText, "Shot " + shotNum);
+    }
+
+    container.appendChild(card);
+  });
+}
+
+/* ══════════════ Web Speech API Audio Preview ══════════════ */
+let isPlayingAudio = false;
+
+function stopAudio() {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  isPlayingAudio = false;
+  $("playIcon").textContent = "▶";
+  $("playText").textContent = "Play Voiceover";
+  $("audioStatus").textContent = "Ready to play";
+  $("audioStatus").style.color = "#a78bfa";
+}
+
+function playVoiceover(text, label = "Full Voiceover") {
+  if (!("speechSynthesis" in window)) {
+    alert("Web Speech API tidak didukung di browser ini.");
+    return;
+  }
+
+  if (isPlayingAudio) {
+    stopAudio();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const cleanText = text.replace(/\[.*?\]/g, "").replace(/\n+/g, " ").trim();
+  if (!cleanText) return;
+
+  const utter = new SpeechSynthesisUtterance(cleanText);
+  utter.rate = 1.05; // Pacing tempo video SaaS (~140 WPM)
+  utter.pitch = 1.0;
+
+  const voices = window.speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Premium"))) ||
+                  voices.find(v => v.lang.startsWith("en"));
+  if (enVoice) utter.voice = enVoice;
+
+  isPlayingAudio = true;
+  $("playIcon").textContent = "⏹";
+  $("playText").textContent = "Stop Audio";
+  $("audioStatus").textContent = `Playing ${label}…`;
+  $("audioStatus").style.color = "#4ade80";
+
+  utter.onend = () => {
+    stopAudio();
+    $("audioStatus").textContent = "Playback completed";
+  };
+  utter.onerror = () => {
+    stopAudio();
+  };
+
+  window.speechSynthesis.speak(utter);
+}
+
+$("btnPlayAudio").addEventListener("click", () => {
+  if (!lastScript && (!currentData || !currentData.shots)) return;
+  const fullVO = currentData && currentData.shots && currentData.shots.length
+    ? currentData.shots.map(s => s.voiceover).join(". ")
+    : lastScript;
+  playVoiceover(fullVO, "Full Storyboard");
+});
+
+function updateAudioStats(text, targetSec) {
+  const words = text.replace(/\[.*?\]/g, "").trim().split(/\s+/).filter(Boolean).length;
+  const estSeconds = Math.round((words / 140) * 60);
+  const target = parseInt(targetSec) || 60;
+  const diff = estSeconds - target;
+
+  $("wpmMeter").textContent = `${words} kata (~140 WPM)`;
+
+  const margin = Math.max(4, Math.round(target * 0.08));
+  let pacingText = `Estimasi VO: ~${estSeconds}s (${formatDuration(estSeconds)})`;
+  if (Math.abs(diff) <= margin) {
+    pacingText += ` (✅ Pas untuk ${formatDuration(target)})`;
+    $("pacingBadge").style.color = "#4ade80";
+  } else if (diff > margin) {
+    pacingText += ` (⚠️ Agak padat +${diff}s dari target ${formatDuration(target)})`;
+    $("pacingBadge").style.color = "#fbbf24";
+  } else {
+    pacingText += ` (⚡ Lebih ringkas -${Math.abs(diff)}s dari target ${formatDuration(target)})`;
+    $("pacingBadge").style.color = "#a78bfa";
+  }
+  $("pacingBadge").textContent = pacingText;
+}
+
+$("regenHooks").addEventListener("click", async () => {
+  const get = k => $("f-" + k).value.trim();
+  if (!get("productName") || !get("whatItDoes")) {
+    return showErr($("appErr"), "Harap isi nama dan deskripsi produk terlebih dahulu.");
+  }
+  $("regenHooks").textContent = "Generating…";
+  $("regenHooks").disabled = true;
+
+  const hookPrompt =
+    "Generate 3 creative hook variations for:\n" +
+    "Product: " + get("productName") + "\n" +
+    "What it does: " + get("whatItDoes") + "\n" +
+    "Target persona: " + (get("targetPersona") || "SaaS teams") + "\n" +
+    "Main pain: " + (get("mainPain") || "Manual work") + "\n" +
+    "Dream outcome: " + (get("dreamOutcome") || "Fast results") + "\n" +
+    "Platform: " + platform + "\nTone: " + tone + "\n\nReturn JSON.";
+
+  try {
+    const raw = await callGemini(HOOKS_SYSTEM, hookPrompt, false);
+    const p = parseJSON(raw);
+    if (p && Array.isArray(p.hookVariations) && p.hookVariations.length) {
+      if (!currentData) currentData = {};
+      currentData.hookVariations = p.hookVariations;
+      selectedHookIdx = -1;
+      renderHooks(currentData.hookVariations);
+    }
+  } catch (e) {
+    showErr($("appErr"), e.message);
+  } finally {
+    $("regenHooks").textContent = "↻ Generate More Hooks";
+    $("regenHooks").disabled = false;
+  }
+});
+
+$("generate").addEventListener("click", async () => {
+  hideErr($("appErr"));
+  stopAudio();
+  const get = k => $("f-" + k).value.trim();
+
+  if (!get("productName") || !get("whatItDoes")) {
+    return showErr($("appErr"), "Product name and description are required.");
+  }
+
+  $("generate").textContent = "Writing your storyboard…";
+  $("generate").classList.add("pulse");
+  $("generate").disabled = true;
+  $("output").classList.add("hidden");
+
+  const platformDesc = platform === "9:16"
+    ? "Vertical 9:16 format (TikTok/Reels/Shorts). Visual cues must focus on centered mobile app screens, zoomed UI cards, and snappy fast-paced narration."
+    : platform === "16:9"
+    ? "Landscape 16:9 format (YouTube / Website Hero). Wide desktop dashboard visuals, pan and zoom transitions."
+    : "Square 1:1 format (LinkedIn/Twitter Ads). Compact centered product UI with strong value prop.";
+
+  const toneDesc = tone === "witty"
+    ? "Witty & Sharp tone (like Linear or Raycast): smart, concise, friend-to-friend with subtle wit, no corporate fluff."
+    : tone === "enterprise"
+    ? "Enterprise & Authoritative tone (like Stripe or Datadog): confident, highly credible, focused on workflow efficiency, scale, and ROI."
+    : "High Energy & Hype tone (like Product Hunt launch or viral AI tools): exciting, punchy, forward-leaning, and dynamic.";
+
+  const targetSec = parseInt(length) || 60;
+  const estWords = Math.round((targetSec / 60) * 140);
+  const estShots = Math.max(4, Math.round(targetSec / 18));
+  const durLabel = formatDuration(targetSec);
+
+  const prompt =
+    "Generate a " + durLabel + " " + videoType + " video script and motion storyboard for this SaaS product:\n\n" +
+    "Product: " + get("productName") + "\n" +
+    "What it does: " + get("whatItDoes") + "\n" +
+    "Target persona: " + (get("targetPersona") || "not specified") + "\n" +
+    "Main pain: " + (get("mainPain") || "not specified") + "\n" +
+    "Dream outcome: " + (get("dreamOutcome") || "not specified") + "\n" +
+    "Key features: " + (get("features") || "not specified") + "\n" +
+    "Video CTA: " + (get("cta") || "Try it free") + ". Use the product name in the CTA line.\n\n" +
+    "Video type: " + videoType + "\n" +
+    "Target length: " + targetSec + " seconds (" + durLabel + ", approximately " + estWords + " words spoken at standard ~140 WPM pace).\n" +
+    "Storyboard Shots Requirement: Generate approximately " + estShots + " sequential shots (Shot 1 through Shot " + estShots + "). Each shot MUST contain substantial voiceover (~" + Math.round(estWords / estShots) + " words per shot) and high-fidelity motion graphics visual direction, paced to realistically fill " + targetSec + " seconds without rushing.\n" +
+    "Aspect Ratio & Platform: " + platform + " - " + platformDesc + "\n" +
+    "Tone of Voice: " + tone + " - " + toneDesc + "\n\n" +
+    "Return complete JSON with shots and hookVariations.";
+
+  try {
+    const raw = await callGemini(SCRIPT_SYSTEM, prompt, false);
+    const p = parseJSON(raw);
+    if (!p) {
+      showErr($("appErr"), "Generation failed. Try again.");
+    } else {
+      currentData = p;
+      selectedHookIdx = -1;
+      lastScript = p.script || "";
+
+      // Fallback: If AI returned plain script instead of shots array, generate shots from text
+      if (!currentData.shots || !currentData.shots.length) {
+        const regex = /\[(.*?)\]\n?([\s\S]*?)(?=(?:\[.*?\])|$)/g;
+        let m;
+        const rawBeats = [];
+        while ((m = regex.exec(lastScript)) !== null) {
+          rawBeats.push({ beat: m[1].trim(), vo: m[2].trim() });
+        }
+        const totalBeats = Math.max(1, rawBeats.length);
+        const perShotSec = Math.max(4, Math.round(targetSec / totalBeats));
+        currentData.shots = rawBeats.map((b, idx) => ({
+          shot: idx + 1,
+          beat: b.beat,
+          duration: `~${perShotSec}s`,
+          voiceover: b.vo,
+          visual: `Motion graphic UI animation showcasing ${b.beat.toLowerCase()} on screen.`,
+          textOnScreen: get("productName")
+        }));
+      }
+
+      if (!currentData.hookVariations || !currentData.hookVariations.length) {
+        currentData.hookVariations = [
+          {
+            type: "Problem-Focused",
+            voiceover: "Still struggling with " + (get("mainPain") || "slow manual workflows") + "?",
+            visual: "Split screen of chaotic tabs and manual error notifications.",
+            textOnScreen: "THE OLD WAY"
+          },
+          {
+            type: "Dream Outcome",
+            voiceover: "What if " + (get("dreamOutcome") || "everything was completely automated") + "?",
+            visual: "Sleek glowing dashboard auto-completing tasks seamlessly.",
+            textOnScreen: "THE NEW WAY"
+          },
+          {
+            type: "Curiosity / Teaser",
+            voiceover: "Turn this chaos into a seamless workflow with " + (get("productName") || "one tool") + ".",
+            visual: "Fast-paced UI zoom-in revealing the product interface.",
+            textOnScreen: get("productName")
+          }
+        ];
+      }
+
+      rebuildLastScript();
+      renderMainOutput();
+      renderHooks(currentData.hookVariations);
+      updateAudioStats(lastScript, length);
+
+      $("structure").textContent = p.structure ? ("Structure: " + p.structure + " · " + (p.wordCount || "") + " words") : "";
+      $("tags").innerHTML = "";
+      [get("productName"), p.hookType, p.estimatedDuration || formatDuration(length), platform, tone.toUpperCase()].filter(Boolean).forEach(t => {
+        const s = document.createElement("span");
+        s.className = "tag";
+        s.textContent = t;
+        $("tags").appendChild(s);
+      });
+      $("output").classList.remove("hidden");
+    }
+  } catch (e) {
+    showErr($("appErr"), e.message);
+  } finally {
+    $("generate").textContent = "Generate Script";
+    $("generate").classList.remove("pulse");
+    $("generate").disabled = false;
+  }
+});
+
+$("copy").addEventListener("click", () => {
+  if (!lastScript) return;
+  navigator.clipboard.writeText(lastScript);
+  $("copy").textContent = "Copied VO!";
+  setTimeout(() => { $("copy").textContent = "Copy Voiceover"; }, 2000);
+});
+
+$("copyStoryboard").addEventListener("click", () => {
+  if (!currentData || !currentData.shots || !currentData.shots.length) {
+    if (lastScript) navigator.clipboard.writeText(lastScript);
+    return;
+  }
+  const get = k => $("f-" + k).value.trim();
+  let md = "# " + get("productName") + " Video Storyboard (" + formatDuration(length) + " " + videoType + ")\n\n";
+  md += "| Shot | Beat | Duration | Voiceover (Audio) | Visual Cue (Motion Graphic) | On Screen Text |\n";
+  md += "|---|---|---|---|---|---|\n";
+  currentData.shots.forEach((s, i) => {
+    const cleanVO = (s.voiceover || "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+    const cleanVis = (s.visual || "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+    md += "| " + (s.shot || (i + 1)) + " | " + (s.beat || "") + " | " + (s.duration || "") + " | \"" + cleanVO + "\" | " + cleanVis + " | " + (s.textOnScreen || "") + " |\n";
+  });
+  navigator.clipboard.writeText(md);
+  $("copyStoryboard").textContent = "Copied Table (MD)!";
+  setTimeout(() => { $("copyStoryboard").textContent = "Copy Storyboard (MD)"; }, 2000);
+});
+
+/* ══════════════ boot ══════════════ */
+if (store.get("gemini_key")) openApp();
+</script>
